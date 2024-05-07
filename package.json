@@ -1,0 +1,32 @@
+{
+  "name": "cs320",
+  "version": "1.0.0",
+  "description": "web application development",
+  "main": "main",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "author": "Jack Ag",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemon": "^3.1.0",
+    "redis": "^4.6.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ensign-College/boxes-api-Jack27ag.git"
+  },
+  "keywords": [
+    "Web",
+    "Development",
+    "API"
+  ],
+  "bugs": {
+    "url": "https://github.com/Ensign-College/boxes-api-Jack27ag/issues"
+  },
+  "homepage": "https://github.com/Ensign-College/boxes-api-Jack27ag#readme"
+}

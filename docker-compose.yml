@@ -1,17 +1,16 @@
-version: '3.8'
+version: "3.8"
 services:
-
   redis:
     image: redis/redis-stack-server:latest
     restart: unless-stopped
     volumes:
       - redis-data:/data
     ports:
-      - "6379:6379"      
+      - "6379:6379"
   redis-insight:
     image: redislabs/redisinsight
     restart: unless-stopped
     ports:
-      - "8080:8001"    
+      - "8080:8001"
 volumes:
   redis-data:
