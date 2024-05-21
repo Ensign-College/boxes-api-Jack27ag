@@ -1,29 +1,26 @@
 require("dotenv").config();
-const redis = require("redis");
+const { createClient } = require("redis");
 const express = require("express");
+const cors = require("cors");
 
-// Create a Redis client
-const redisClient = redis.createClient({
+const redisClient = createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
 });
 
-// Log Redis client errors
 redisClient.on("error", (err) => {
   console.log("Redis Client error", err);
 });
 redisClient.connect();
 
-// Create an Express application
 const app = express();
 app.use(express.json());
 
-// GET API endpoint to test the application
-app.get("/", async (req, res) => {
-  res.send("Hello World!");
-});
+const corsOptions = {
+  origin: process.env.FRONTEND_ORIGIN,
+};
+app.use(cors(corsOptions));
 
-// POST API endpoint to set a key-value pair
 app.post("/data/:key", async (req, res) => {
   const { key } = req.params;
   const data = req.body;
@@ -37,7 +34,6 @@ app.post("/data/:key", async (req, res) => {
   }
 });
 
-// GET API endpoint to retrieve a value by key
 app.get("/data/:key", async (req, res) => {
   const { key } = req.params;
 
@@ -54,6 +50,17 @@ app.get("/data/:key", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Application running on port 3000");
+app.get("/keys", (req, res) => {
+  redisClient.keys("*", (err, keys) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send({ message: "Error retrieving keys!" });
+    } else {
+      res.status(200).send({ keys });
+    }
+  });
+});
+
+app.listen(3001, () => {
+  console.log("Application running on port 3001");
 });
