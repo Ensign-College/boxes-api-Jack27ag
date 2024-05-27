@@ -21,6 +21,10 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
 app.post("/data/:key", async (req, res) => {
   const { key } = req.params;
   const data = req.body;
@@ -50,17 +54,27 @@ app.get("/data/:key", async (req, res) => {
   }
 });
 
-app.get("/keys", (req, res) => {
-  redisClient.keys("*", (err, keys) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send({ message: "Error retrieving keys!" });
+app.get("/data", async (req, res) => {
+  try {
+    const keys = await redisClient.keys("*");
+    if (keys.length === 0) {
+      res.status(404).send({ message: "No keys found!" });
     } else {
-      res.status(200).send({ keys });
+      const data = [];
+      for (const key of keys) {
+        data.push({
+          key,
+          value: JSON.parse(await redisClient.get(key)),
+        });
+      }
+      res.status(200).send({ data });
     }
-  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving data!" });
+  }
 });
 
-app.listen(3001, () => {
-  console.log("Application running on port 3001");
+app.listen(process.env.EXPRESS_PORT, () => {
+  console.log("Application running on port ${process.env.EXPRESS_PORT}!");
 });
