@@ -25,9 +25,10 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.post("/data/:key", async (req, res) => {
-  const { key } = req.params;
-  const data = req.body;
+// POST /Collections
+app.post("/watches", async (req, res) => {
+  const key = "Collections";
+  const data = {};
 
   try {
     await redisClient.set(key, JSON.stringify(data));
@@ -38,15 +39,14 @@ app.post("/data/:key", async (req, res) => {
   }
 });
 
-app.get("/data/:key", async (req, res) => {
-  const { key } = req.params;
-
+// GET /Collections
+app.get("/watches", async (req, res) => {
   try {
-    const value = await redisClient.get(key);
-    if (value === null) {
-      res.status(404).send({ message: "Key not found!" });
+    const Collections = await redisClient.get("Collections");
+    if (Collections === null) {
+      res.status(404).send({ message: "Collections not found!" });
     } else {
-      res.status(200).send({ data: JSON.parse(value) });
+      res.status(200).send({ Collections: JSON.parse(Collections) });
     }
   } catch (error) {
     console.error(error);
@@ -54,27 +54,42 @@ app.get("/data/:key", async (req, res) => {
   }
 });
 
-app.get("/data", async (req, res) => {
-  try {
-    const keys = await redisClient.keys("*");
-    if (keys.length === 0) {
-      res.status(404).send({ message: "No keys found!" });
-    } else {
-      const data = [];
-      for (const key of keys) {
-        data.push({
-          key,
-          value: JSON.parse(await redisClient.get(key)),
-        });
-      }
-      res.status(200).send({ data });
+// post a collection
+app.post("/watches/collection", async (req, res) => {
+  const { owner } = req.body;
+  let Collections = [];
+
+  redisClient.get("Collections", (err, collection) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send({ message: "Error: Collections not found!" });
+      return;
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Error retrieving data!" });
-  }
+
+    if (collection) {
+      Collections = JSON.parse(collection);
+    }
+
+    const newCollectionID = redisClient.incr("collectionID_counter").toString();
+    const key = `collectionID_${newCollectionID}`;
+
+    Collections[newCollectionID] = {
+      owner: owner,
+      watches: [],
+    };
+
+    try {
+      redisClient.set(key, JSON.stringify(Collections[newCollectionID]));
+      res.status(201).send({ message: "Collection created successfully!" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Error creating collection!" });
+    }
+  });
 });
 
 app.listen(process.env.EXPRESS_PORT, () => {
-  console.log("Application running on port ${process.env.EXPRESS_PORT}!");
+  console.log(
+    `Application running on port ${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT} !`
+  );
 });
