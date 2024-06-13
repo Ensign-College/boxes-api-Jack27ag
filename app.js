@@ -71,7 +71,7 @@ app.post("/watches/collection", async (req, res) => {
     }
 
     const newCollectionID = redisClient.incr("collectionID_counter").toString();
-    const key = `collectionID_${newCollectionID}`;
+    const key = `Collections.collectionID_${newCollectionID}`;
 
     Collections[newCollectionID] = {
       owner: owner,
@@ -86,6 +86,23 @@ app.post("/watches/collection", async (req, res) => {
       res.status(500).send({ message: "Error creating collection!" });
     }
   });
+});
+
+// GET /Collection
+app.get("/watches/collection/id", async (req, res) => {
+  const { collectionID } = req.params;
+  const key = `Collections.collectionID_${collectionID}`;
+  try {
+    const Collections = await redisClient.get(key);
+    if (Collections === null) {
+      res.status(404).send({ message: "Collection not found!" });
+    } else {
+      res.status(200).send({ Collections: JSON.parse(Collections) });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving data!" });
+  }
 });
 
 app.listen(process.env.EXPRESS_PORT, () => {
